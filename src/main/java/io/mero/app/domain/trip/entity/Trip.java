@@ -1,0 +1,112 @@
+package io.mero.app.domain.trip.entity;
+
+import io.mero.app.domain.user.entity.User;
+import io.mero.app.global.entity.BaseEntity;
+import io.mero.app.global.enums.Currency;
+import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+@Entity
+@Table(name = "trips")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class Trip extends BaseEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @Column(nullable = false, length = 200)
+    private String title;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    @Column(name = "start_date", nullable = false)
+    private LocalDate startDate;
+
+    @Column(name = "end_date", nullable = false)
+    private LocalDate endDate;
+
+    @Column(length = 500)
+    private String countries;
+
+    @Column(name = "total_budget", precision = 15, scale = 2)
+    private BigDecimal totalBudget;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "budget_currency", length = 20)
+    private Currency budgetCurrency;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "default_currency", length = 20)
+    private Currency defaultCurrency;
+
+    @Builder
+    public Trip(User user, String title, String description,
+                LocalDate startDate, LocalDate endDate, String countries,
+                BigDecimal totalBudget, Currency budgetCurrency, Currency defaultCurrency) {
+        this.user = user;
+        this.title = title;
+        this.description = description;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.countries = countries;
+        this.totalBudget = totalBudget;
+        this.budgetCurrency = budgetCurrency;
+        this.defaultCurrency = defaultCurrency != null ? defaultCurrency : Currency.KRW;
+    }
+
+    public void updateTitle(String title) {
+        if (title == null || title.trim().isEmpty()) {
+            throw new IllegalArgumentException("여행 제목은 필수입니다");
+        }
+        this.title = title;
+    }
+
+    public void updateDescription(String description) {
+        this.description = description;
+    }
+
+    public void updatePeriod(LocalDate startDate, LocalDate endDate) {
+        if (startDate == null || endDate == null) {
+            throw new IllegalArgumentException("시작일과 종료일은 필수입니다");
+        }
+        if (startDate.isAfter(endDate)) {
+            throw new IllegalArgumentException("시작일은 종료일보다 이전이어야 합니다");
+        }
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
+
+    public void updateCountries(String countries) {
+        this.countries = countries;
+    }
+
+    public void updateBudget(BigDecimal totalBudget, Currency budgetCurrency) {
+        if (totalBudget != null && totalBudget.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("예산은 0 이상이어야 합니다");
+        }
+        this.totalBudget = totalBudget;
+        if (budgetCurrency != null) {
+            this.budgetCurrency = budgetCurrency;
+        }
+    }
+
+    public void updateDefaultCurrency(Currency currency) {
+        if (currency == null) {
+            throw new IllegalArgumentException("기본 통화는 필수입니다");
+        }
+        this.defaultCurrency = currency;
+    }
+}
