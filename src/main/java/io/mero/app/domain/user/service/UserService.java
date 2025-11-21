@@ -7,6 +7,7 @@ import io.mero.app.domain.user.repository.UserRepository;
 import io.mero.app.global.enums.Currency;
 import io.mero.app.global.enums.Timezone;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public UserResponse signUp(SignUpRequest request) {
@@ -25,7 +27,7 @@ public class UserService {
 
         User user = User.builder()
                 .email(request.getEmail())
-                .passwordHash(request.getPassword())
+                .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .nickname(request.getNickname())
                 .defaultCurrency(request.getDefaultCurrency() != null ? request.getDefaultCurrency() : Currency.KRW)
                 .timezone(request.getTimezone() != null ? request.getTimezone() : Timezone.ASIA_SEOUL)
