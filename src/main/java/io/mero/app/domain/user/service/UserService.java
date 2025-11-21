@@ -21,20 +21,36 @@ public class UserService {
 
     @Transactional
     public UserResponse signUp(SignUpRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("이미 사용 중인 이메일입니다");
-        }
+        validateDuplicateEmail(request.getEmail());
+        validateDuplicateNickname(request.getNickname());
 
-        User user = User.builder()
-                .email(request.getEmail())
-                .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .nickname(request.getNickname())
-                .defaultCurrency(request.getDefaultCurrency() != null ? request.getDefaultCurrency() : Currency.KRW)
-                .timezone(request.getTimezone() != null ? request.getTimezone() : Timezone.ASIA_SEOUL)
-                .build();
-
+        User user = createUser(request);
         User savedUser = userRepository.save(user);
 
         return UserResponse.from(savedUser);
+    }
+
+    private void validateDuplicateEmail(String email) {
+        if (userRepository.existsByEmail(email)) {
+            throw new IllegalArgumentException("이미 사용 중인 이메일입니다");
+        }
+    }
+
+    private void validateDuplicateNickname(String nickname) {
+        if (userRepository.existsByNickname(nickname)) {
+            throw new IllegalArgumentException("이미 사용 중인 닉네임입니다");
+        }
+    }
+
+    private User createUser(SignUpRequest request) {
+        return User.builder()
+                .email(request.getEmail())
+                .passwordHash(passwordEncoder.encode(request.getPassword()))
+                .nickname(request.getNickname())
+                .defaultCurrency(request.getDefaultCurrency() != null ?
+                        request.getDefaultCurrency() : Currency.KRW)
+                .timezone(request.getTimezone() != null ?
+                        request.getTimezone() : Timezone.ASIA_SEOUL)
+                .build();
     }
 }

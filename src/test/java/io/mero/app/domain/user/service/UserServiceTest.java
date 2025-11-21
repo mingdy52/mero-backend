@@ -116,4 +116,28 @@ class UserServiceTest {
         assertThat(response.getDefaultCurrency()).isEqualTo(Currency.KRW);
         assertThat(response.getTimezone()).isEqualTo(Timezone.ASIA_SEOUL);
     }
+
+    @Test
+    @DisplayName("회원가입 실패 - 닉네임 중복")
+    void 회원가입_실패_닉네임_중복() {
+        // given
+        SignUpRequest request = new SignUpRequest(
+                "test@example.com",
+                "password123",
+                "중복닉네임",
+                null,
+                null
+        );
+
+        given(userRepository.existsByEmail(request.getEmail())).willReturn(false);
+        given(userRepository.existsByNickname(request.getNickname())).willReturn(true);
+
+        // when & then
+        assertThatThrownBy(() -> userService.signUp(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("이미 사용 중인 닉네임입니다");
+
+        verify(userRepository).existsByEmail(request.getEmail());
+        verify(userRepository).existsByNickname(request.getNickname());
+    }
 }
